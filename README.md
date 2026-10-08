@@ -8,7 +8,7 @@ Academic project for **PRM372S Project Management 3**, CPUT.
 - `docs/EVIDENCE.md` — test results, performance runs, architecture, decisions, limitations
 - `scripts/` — evidence scripts (test report, search load test)
 
-> **Status:** Slice 0 (scaffolding). Features are added slice by slice; see `docs/EVIDENCE.md` section 1.
+> **Status:** Slice 6 done (FR1 to FR6: auth, listings, search, cart/orders/mock payment, reviews, bulletin board). Not yet built: Redis cache and load test (Slice 7), separate payment service (Slice 8). Features are added slice by slice; see `docs/EVIDENCE.md` section 1.
 
 ---
 
@@ -77,12 +77,25 @@ npm run dev
 Open <http://localhost:5173>. The dev server forwards `/api` calls to the backend on port 8080.
 For a phone-sized view use the browser's device toolbar (F12 → Ctrl+Shift+M).
 
+**If port 8080 is already used by another program**, run the API on another port and tell the dev server where it is:
+```powershell
+cd backend;  $env:PORT = "8081"; .\mvnw.cmd spring-boot:run
+cd frontend; $env:API_PROXY_TARGET = "http://localhost:8081"; npm run dev
+```
+
 ## 5. Run the tests and the evidence report
 ```powershell
 cd backend;  .\mvnw.cmd test;        cd ..     # JUnit 5 + MockMvc on in-memory H2 (no MySQL needed)
 cd frontend; npm test -- --run;      cd ..     # Vitest + React Testing Library
 node scripts/test-report.mjs                    # writes the results into docs/EVIDENCE.md section 2
 ```
+
+**Whole-system smoke test** (backend must be running; it creates its own throw-away students and really buys, reviews and posts, so use a local database):
+```powershell
+node scripts/e2e-smoke.mjs                              # default http://localhost:8080
+node scripts/e2e-smoke.mjs --api http://localhost:8081  # if you started the API on another port
+```
+It prints one PASS/FAIL line per check (register, listings, search, payment, reviews, bulletin, error handling) and exits with code 1 if anything fails.
 
 ## 6. Configuration (environment variables)
 
@@ -94,13 +107,26 @@ node scripts/test-report.mjs                    # writes the results into docs/E
 | `APP_CORS_ORIGINS` | `http://localhost:5173` | Comma-separated browser origins allowed to call the API |
 | `PORT` | `8080` | HTTP port (set automatically by Render) |
 | `SPRING_PROFILES_ACTIVE` | _(unset)_ | `prod` on Render (uses `application-prod.properties`); `h2` for the no-MySQL quick start |
-| `JWT_SECRET` | _(unset)_ | Login-token signing key; required with `prod` |
+| `JWT_SECRET` | _(unset)_ | Login-token signing key; required with `prod`. Locally, if unset, a random key is made at start-up (you are logged out whenever the backend restarts) |
+| `JWT_EXPIRATION_MINUTES` | `1440` | How long a login lasts (24 h) |
+| `ALLOWED_EMAIL_DOMAIN` | `mycput.ac.za` | Students must register with an email ending in `@` + this domain |
 | `VITE_API_URL` (frontend) | _(unset locally)_ | API address for production builds; committed in `frontend/.env.production` |
 
 No secrets are stored in git. With the `prod` profile the API refuses to start if `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` or `JWT_SECRET` is missing, and names the missing one.
 
 ## 7. Demo logins
-_Added in Slice 1 (seed data)._
+Created automatically the first time the backend starts (the students while the users table is empty, plus 15 demo listings while the listings table is empty). All three use the password `Password123!`.
+
+| Name | Email |
+|---|---|
+| Thabo Nkosi | `thabo@mycput.ac.za` |
+| Ayesha Daniels | `ayesha@mycput.ac.za` |
+| Lerato Mokoena | `lerato@mycput.ac.za` |
+
+**Test cards for the (simulated) payment:** `4242 4242 4242 4242` (or any other 12–19 digit number) is approved; `4000 0000 0000 0002` is always declined, which shows the failure path. No real money moves and card numbers are never stored.
+
+You can also register your own account with any `@mycput.ac.za` address (no email is sent: the app only checks that the address ends in `@mycput.ac.za`).
+These are demo accounts with a public password: do not reuse a real password anywhere in this app.
 
 ## 8. Optional: Redis cache and load test
 _Added in Slice 7._
@@ -115,7 +141,7 @@ Local HTTP is for development; the deployed site uses HTTPS.
 ## 10. Project structure
 ```
 backend/                 Spring Boot API (package za.ac.cput.unitrade)
-  src/main/java/...      controller / service / repository / domain / dto / config
+  src/main/java/...      controller / service / repository / domain / dto / config / security / exception
   src/main/resources/    application.properties (+ application-h2.properties)
   src/test/              JUnit tests, application-test.properties (H2)
   Dockerfile             container build used by Render

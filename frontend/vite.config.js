@@ -7,7 +7,9 @@ export default defineConfig({
     port: 5173,
     // In development the browser calls /api on the Vite server, which forwards to Spring Boot.
     // Same origin for the browser, so no CORS setup is needed locally.
-    proxy: { '/api': 'http://localhost:8080' },
+    // Another program may already use port 8080: start the API with PORT=8081 and the dev server with
+    // API_PROXY_TARGET=http://localhost:8081 (README section 4).
+    proxy: { '/api': process.env.API_PROXY_TARGET || 'http://localhost:8080' },
   },
   test: {
     environment: 'jsdom',

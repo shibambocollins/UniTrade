@@ -8,9 +8,15 @@ Read in this order: `CLAUDE.md` (rules, requirements, build order) → this file
 | Item | State |
 |---|---|
 | Slice 0 — scaffolding | **Done.** Spring Boot API + React app, `GET /api/health`, MySQL verified, H2 for tests, evidence pipeline proven (6/6 tests, see EVIDENCE.md §2). CI green on GitHub. |
-| Slice 1 — FR1 Auth | **Next.** Not started. |
-| Slices 2–8 | Not started (see CLAUDE.md §6). |
-| Deployment | Frontend **live** on Vercel: https://uni-trade-eight.vercel.app (Collins's account, auto-deploys on push). **Backend (Render) and database (Aiven) are not deployed — this is your job**, with your own free accounts: DEPLOYMENT.md §4 (~20 min). Everything is prepared and tested: Docker image, production config, and a test connection to an Aiven MySQL from the dev PC. |
+| Slice 1 — FR1 Auth | **Built and tested (2026-10-08).** 30/30 automated tests pass; verified against MySQL with curl. Waiting for Collins's commit and manual tests M1-01…M1-05. |
+| Slice 2 — FR2 Listings | **Built and tested (2026-10-08).** 54/54 automated tests pass; verified against MySQL with curl. Waiting for Collins's commit and manual tests M2-01…M2-04. |
+| Slice 3 — FR3 Search/filter | **Built and tested (2026-10-08).** 72/72 automated tests pass; verified against MySQL. Waiting for Collins's commit and manual tests M3-01…M3-03. |
+| Slice 4 — FR4 Cart/checkout/payment | **Built and tested (2026-10-08).** 102/102 automated tests pass (incl. a two-thread race test with a mutation check); verified against MySQL. Waiting for Collins's commit and manual tests M4-01…M4-06. |
+| Slice 5 — FR6 Reviews | **Built and tested (2026-10-09).** 120/120 automated tests pass; demo seed now includes one completed order with a review. Waiting for Collins's commit and manual tests M5-01…M5-04. |
+| Slice 6 — FR5 Bulletin board | **Built and tested (2026-10-09).** 136/136 automated tests pass. Waiting for Collins's commit and manual tests M6-01…M6-03. |
+| Slice 7 — NFR2 Redis + load test | **Next.** Not started: needs the cache, the `perf` profile with 10,000 listings and two measured runs (EVIDENCE §3). Deadline is 9 Oct 2026. |
+| Slice 8 — separate payment service | Not started (stretch, only after Slice 7). |
+| Deployment | Frontend live on Vercel: https://uni-trade-eight.vercel.app. API https://unitrade-cput-api.onrender.com and DB (Aiven): see DEPLOYMENT.md §1 for the current state. Container and production mode tested locally. |
 | Manual tests | M0-01…M0-04 in EVIDENCE.md §2.3 are `NOT RUN` (a person must run them and add screenshots). |
 
 ## 2. Set up on a new machine (about 15 minutes)
@@ -71,6 +77,9 @@ If the hosting must move to someone else's accounts, follow DEPLOYMENT.md §3 fr
 - **API client rule (DEF-04):** a successful answer that is not JSON is treated as an error; backend endpoints must always return JSON or 204.
 - **Aiven MySQL requires a primary key on every table** (local MySQL does not): every entity needs an `@Id`; use a `Set` for `@ManyToMany` (composite key) or a join entity. Otherwise the deployed API fails at start-up while local runs work.
 - **Free hosting sleeps:** first request after 15 idle minutes takes ~1.5–3 min; warm up before demos.
+
+- **Port 8080 may be taken** by another project on the developer's PC: run the API with `PORT=8081` and the dev server with `API_PROXY_TARGET=http://localhost:8081` (README §4). The default local database login is in the git-ignored `backend/application-local.properties` (it may use the MySQL `root` user on this machine).
+- **Auth for later slices:** controllers get the logged-in student with `@AuthenticationPrincipal AuthenticatedUser user` (`user.id()`); errors are thrown as `ApiException.notFound/forbidden/conflict/badRequest(...)`; public endpoints (e.g. `GET /api/listings`) must be added to the `permitAll` list in `SecurityConfig`; the frontend sends the token with `apiRequest(path, { token })` and `useAuth()` gives `user` and `token`; wrap protected pages in the `<RequireAuth>` route in `App.jsx`.
 
 ## 7. Evidence rules (short version of CLAUDE.md §7)
 Update `docs/EVIDENCE.md` at the end of every slice; never invent results; run `node scripts/test-report.mjs` after tests; manual tests start as `NOT RUN`; name tests with the requirement ID (`fr1_01_...`, class `Fr1AuthTest`).

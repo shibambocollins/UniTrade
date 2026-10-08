@@ -16,16 +16,16 @@ const jsonResponse = (body, status = 200) =>
 describe('Slice 0 - app shell', () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it('slice0_01 shows the API and database status from /api/health', async () => {
+  it('slice0_01 shows the API and database status from /api/health (page /status)', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse({ status: 'UP', database: 'UP' }));
-    renderAt('/');
-    expect(screen.getByRole('heading', { name: /welcome to unitrade/i })).toBeInTheDocument();
+    renderAt('/status');
+    expect(screen.getByRole('heading', { name: /system status/i })).toBeInTheDocument();
     expect(await screen.findByText(/database:/i)).toBeInTheDocument();
   });
 
   it('slice0_02 shows a friendly error (not a blank screen) when the server is unreachable', async () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
-    renderAt('/');
+    renderAt('/status');
     expect(await screen.findByRole('alert')).toHaveTextContent(/cannot reach the unitrade server/i);
   });
 
@@ -43,7 +43,7 @@ describe('Slice 0 - app shell', () => {
         headers: { 'Content-Type': 'text/html; charset=utf-8' },
       }),
     );
-    renderAt('/');
+    renderAt('/status');
     expect(await screen.findByRole('alert')).toHaveTextContent(/unexpected response/i);
   });
 });

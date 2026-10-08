@@ -2,12 +2,15 @@ package za.ac.cput.unitrade;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@SpringBootApplication
+// UserDetailsServiceAutoConfiguration is excluded: it would create a throw-away "user" with a random password.
+// We authenticate students ourselves (AuthService + JWT), so that default account must not exist.
+@SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
 public class UnitradeApplication {
 
     /** Secrets that must be set as environment variables when running with the "prod" profile (Render). */
