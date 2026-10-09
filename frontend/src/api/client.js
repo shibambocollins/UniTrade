@@ -40,6 +40,11 @@ export async function apiRequest(path, { method = 'GET', body, token } = {}) {
   const isJson = (response.headers.get('Content-Type') || '').includes('application/json');
   const data = isJson ? await response.json().catch(() => null) : null;
 
+  // Our API answers every error with JSON. A 5xx that is not JSON comes from something in between
+  // (the Vite dev proxy or the host) when the API itself is down or asleep (DEF-11).
+  if (!response.ok && !isJson && response.status >= 500) {
+    throw new ApiError(0, 'Cannot reach the UniTrade server. Check your connection and try again.');
+  }
   if (!response.ok) {
     const message =
       data?.message || FRIENDLY_MESSAGES[response.status] || 'Something went wrong. Please try again.';

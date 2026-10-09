@@ -1,0 +1,202 @@
+<!doctype html>
+<!-- Source of docs/diagrams/system-architecture.png. To re-render after editing: open this file in Chrome and screenshot it,
+     or: google-chrome --headless --hide-scrollbars --force-device-scale-factor=2 --window-size=1600,HEIGHT --screenshot=system-architecture.png system-architecture.html -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UniTrade system architecture</title>
+<style>
+  :root {
+    --navy: #1d3b6f; --navy-dark: #142a50; --gold: #f2a900; --bg: #f5f7fb; --line: #9aa8c2;
+    --ink: #1b2333; --muted: #5b667a; --card: #ffffff; --green: #1f7a4d; --red: #b3261e;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: Ubuntu, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); }
+  .page { width: 1600px; padding: 36px 44px 30px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 22px; }
+  h1 { margin: 0; font-size: 34px; color: var(--navy-dark); }
+  h1 span { color: var(--gold); }
+  .sub { color: var(--muted); font-size: 17px; }
+
+  .main { display: grid; grid-template-columns: 1fr 300px; gap: 26px; }
+  .tier { border-radius: 16px; padding: 16px 18px 18px; position: relative; }
+  .tier-title { font-size: 15px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; }
+  .tier-title small { text-transform: none; letter-spacing: 0; font-weight: 500; opacity: .85; font-size: 14px; }
+
+  .client { background: #e6edf8; border: 2px solid #b8c7e3; }
+  .client .tier-title { color: var(--navy); }
+  .api { background: var(--navy); color: #fff; }
+  .db { background: #fff4d6; border: 2px solid #f0d58a; }
+  .db .tier-title { color: #7a5a00; }
+
+  .row { display: grid; gap: 10px; }
+  .box { background: var(--card); border-radius: 10px; padding: 9px 11px; font-size: 14px; line-height: 1.35; color: var(--ink); border: 1px solid #d9e0ec; }
+  .box b { display: block; font-size: 15px; margin-bottom: 2px; color: var(--navy-dark); }
+  .box .fr { display: inline-block; font-size: 11.5px; font-weight: 700; color: #fff; background: var(--navy); border-radius: 5px; padding: 1px 6px; margin-right: 3px; }
+  .api .box { border: 0; }
+  .layer { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: stretch; margin-bottom: 10px; }
+  .layer-name { font-size: 14px; font-weight: 700; color: #cfe0ff; display: flex; flex-direction: column; justify-content: center; border-right: 3px solid var(--gold); padding-right: 10px; }
+  .layer-name small { font-weight: 400; color: #a9bbdb; font-size: 12.5px; }
+
+  .arrow { display: flex; align-items: center; justify-content: center; gap: 12px; height: 46px; color: var(--muted); font-size: 14.5px; }
+  .arrow .shaft { width: 3px; height: 100%; background: var(--line); position: relative; }
+  .arrow .shaft::before, .arrow .shaft::after { content: ""; position: absolute; left: -6px; border: 7.5px solid transparent; }
+  .arrow .shaft::before { top: -4px; border-bottom-color: var(--line); border-top: 0; }
+  .arrow .shaft::after { bottom: -4px; border-top-color: var(--line); border-bottom: 0; }
+  .arrow b { color: var(--ink); }
+  .inner-arrow { text-align: center; color: var(--gold); font-size: 18px; line-height: 1; margin: -4px 0 6px 162px; }
+
+  .tables { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .table { background: #fff; border: 1px solid #ecd9a2; border-radius: 10px; padding: 8px 10px; font-size: 13px; color: var(--muted); }
+  .table b { display: block; color: #7a5a00; font-family: "Ubuntu Mono", Consolas, monospace; font-size: 15px; margin-bottom: 2px; }
+
+  .side { display: flex; flex-direction: column; gap: 14px; }
+  .panel { background: #fff; border: 1px solid #d9e0ec; border-radius: 14px; padding: 14px 16px; font-size: 14px; line-height: 1.45; }
+  .panel h3 { margin: 0 0 8px; font-size: 15px; color: var(--navy-dark); text-transform: uppercase; letter-spacing: .05em; }
+  .panel ul { margin: 0; padding-left: 18px; }
+  .panel li { margin-bottom: 3px; }
+  .pay { border: 2px dashed var(--gold); }
+  .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 1px 7px; border-radius: 6px; }
+  .ok { background: #e2f3ea; color: var(--green); }
+  .no { background: #fbe4e2; color: var(--red); }
+  .flow { font-family: "Ubuntu Mono", Consolas, monospace; font-size: 13.5px; background: var(--bg); border-radius: 8px; padding: 7px 9px; margin-top: 6px; }
+  footer { margin-top: 18px; color: var(--muted); font-size: 13.5px; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Uni<span>Trade</span> — system architecture</h1>
+    <div class="sub">Community Store Mobile-First Marketplace · PRM372S · as built, 9 Oct 2026</div>
+  </header>
+
+  <div class="main">
+    <div>
+      <!-- CLIENT -->
+      <section class="tier client">
+        <div class="tier-title">Browser — React 19 single-page app (Vite 7) <small>mobile-first, 360 px and up</small></div>
+        <div class="row" style="grid-template-columns: 2.2fr 1fr 1fr 1.1fr;">
+          <div class="box"><b>Pages (React Router 7)</b>
+            <span class="fr">FR1</span>Login · Register · Profile &nbsp;
+            <span class="fr">FR2</span>Sell / Edit · Listing · My listings<br>
+            <span class="fr">FR3</span>Home: search + filters &nbsp;
+            <span class="fr">FR4</span>Cart · Checkout · Orders<br>
+            <span class="fr">FR5</span>Bulletin board &nbsp;
+            <span class="fr">FR6</span>Review form · Seller page</div>
+          <div class="box"><b>AuthContext</b>JWT kept in localStorage, sent as <i>Bearer</i> token; RequireAuth guards private pages</div>
+          <div class="box"><b>CartContext</b>Cart lives only in the browser (localStorage); one seller per cart</div>
+          <div class="box"><b>api/client.js</b>Every call goes through here; turns any failure into a friendly message. ErrorBoundary stops blank screens</div>
+        </div>
+      </section>
+
+      <div class="arrow"><div class="shaft"></div><span><b>JSON over HTTP(S)</b> · <code>/api/*</code> · <code>Authorization: Bearer &lt;JWT&gt;</code> · local: Vite proxy :5173 → :8080</span></div>
+
+      <!-- API -->
+      <section class="tier api">
+        <div class="tier-title">Spring Boot 3.5 REST API (Java 17+) <small>package za.ac.cput.unitrade · layered: controller → service → repository → domain</small></div>
+
+        <div class="layer">
+          <div class="layer-name">Security<small>runs before every request</small></div>
+          <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
+            <div class="box"><b>WebConfig — CORS</b>Only the configured site origins may call the API</div>
+            <div class="box"><b>JwtAuthFilter + JwtService</b>Checks the token's HMAC-SHA256 signature and expiry</div>
+            <div class="box"><b>SecurityConfig</b>Public: register/login, browse + search, seller reviews, bulletin, health. Everything else → 401 without a valid token</div>
+          </div>
+        </div>
+        <div class="inner-arrow">▼</div>
+
+        <div class="layer">
+          <div class="layer-name">Controllers<small>HTTP + DTOs, Bean Validation</small></div>
+          <div class="row" style="grid-template-columns: repeat(6, 1fr);">
+            <div class="box"><b>Auth</b>/api/auth</div>
+            <div class="box"><b>Listing</b>/api/listings</div>
+            <div class="box"><b>Order</b>/api/orders</div>
+            <div class="box"><b>Review</b>/api/…/review(s)</div>
+            <div class="box"><b>Bulletin</b>/api/bulletin</div>
+            <div class="box"><b>Health</b>/api/health</div>
+          </div>
+        </div>
+        <div class="inner-arrow">▼</div>
+
+        <div class="layer">
+          <div class="layer-name">Services<small>business rules</small></div>
+          <div class="row" style="grid-template-columns: 1.15fr 1fr 1.6fr 1fr 1fr;">
+            <div class="box"><b>AuthService</b>BCrypt passwords; StudentEmailPolicy: only <i>@mycput.ac.za</i></div>
+            <div class="box"><b>ListingService</b>Owner-only edit/delete (403); soft delete</div>
+            <div class="box"><b>OrderService</b>Prices from DB, never the browser. Pay: lock listing rows, re-check ACTIVE, charge, mark SOLD — one transaction</div>
+            <div class="box"><b>ReviewService</b>Only after COMPLETED; one per order</div>
+            <div class="box"><b>BulletinService</b>Post, list, author-only delete</div>
+          </div>
+        </div>
+        <div class="inner-arrow">▼</div>
+
+        <div class="layer" style="margin-bottom: 0;">
+          <div class="layer-name">Repositories<small>Spring Data JPA, parameterised only</small></div>
+          <div class="row" style="grid-template-columns: 1fr 1.6fr 1fr 1fr 1fr;">
+            <div class="box"><b>UserRepository</b></div>
+            <div class="box"><b>ListingRepository</b>+ ListingSpecifications (search filters), row lock for payment</div>
+            <div class="box"><b>OrderRepository</b></div>
+            <div class="box"><b>ReviewRepository</b></div>
+            <div class="box"><b>BulletinPostRepository</b></div>
+          </div>
+        </div>
+      </section>
+
+      <div class="arrow"><div class="shaft"></div><span><b>JDBC</b> via Hibernate 6 · MySQL 8 (default) · H2 in-memory for the 78 backend tests · optional H2 file profile for a quick start</span></div>
+
+      <!-- DB -->
+      <section class="tier db">
+        <div class="tier-title"><span>MySQL 8 — database “unitrade”</span> <small>tables created by JPA · demo data seeded on first start</small></div>
+        <div class="tables">
+          <div class="table"><b>users</b>email unique, BCrypt hash, role STUDENT</div>
+          <div class="table"><b>listings</b>6 indexes for filters; @Version</div>
+          <div class="table"><b>orders</b>PENDING → PAID → COMPLETED; @Version</div>
+          <div class="table"><b>order_items</b>title + price copied at checkout</div>
+          <div class="table"><b>reviews</b>unique key on order_id</div>
+          <div class="table"><b>bulletin_posts</b>ANNOUNCEMENT · EVENT · SERVICE</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- SIDE PANELS -->
+    <aside class="side">
+      <div class="panel pay">
+        <h3>Payment (FR4)</h3>
+        <b>PaymentGateway</b> interface<br>
+        ↳ <b>MockPaymentGateway</b> (simulated, PayFast-style)
+        <div class="flow">4242 4242 4242 4242 → approved<br>4000 0000 0000 0002 → declined (402)</div>
+        <p style="margin:8px 0 0">OrderService only knows the interface, so a real gateway could replace the mock without changing it. Card numbers are never stored.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Errors (one format)</h3>
+        <b>GlobalExceptionHandler</b> turns every failure into JSON:
+        <div class="flow">{timestamp, status, error,<br>&nbsp;message, path, fieldErrors?}</div>
+        <p style="margin:8px 0 0">400 · 401 · 402 · 403 · 404 · 409 — the UI shows the message, never a stack trace.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Race condition</h3>
+        Two buyers pay for one listing: <code>SELECT … FOR UPDATE</code> makes the second wait, re-check, and get <b>409</b>. Proven by a two-thread test.
+      </div>
+
+      <div class="panel">
+        <h3>Scope</h3>
+        <span class="tag ok">BUILT</span> FR1–FR6, NFR1 security, NFR3 mobile-first<br>
+        <span class="tag no">NOT BUILT</span> Redis cache (NFR2a), separate payment service (NFR2c), messaging, notifications, real PayFast
+      </div>
+
+      <div class="panel">
+        <h3>Optional deployment</h3>
+        Vercel (React build) → Render (API in Docker, <i>prod</i> profile) → Aiven (MySQL). Secrets only in environment variables. Marking runs locally.
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <span>Tests: 78 backend (JUnit 5 + MockMvc + H2) · 59 frontend (Vitest + React Testing Library) · 137/137 passing</span>
+    <span>Source: docs/diagrams/system-architecture.html</span>
+  </footer>
+</div>
+</body>
+</html>

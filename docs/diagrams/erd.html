@@ -1,0 +1,266 @@
+<!doctype html>
+<!-- Source of docs/diagrams/erd.png. Columns taken from the JPA entities in backend/.../domain and checked against
+     MySQL information_schema on 2026-10-09. To re-render: open in Chrome and screenshot the page. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UniTrade ERD</title>
+<style>
+  :root { --navy: #1d3b6f; --navy-dark: #142a50; --gold: #f2a900; --bg: #f5f7fb; --line: #4a5d80; --ink: #1b2333; --muted: #6a7488; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); font-family: Ubuntu, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); }
+  .page { position: relative; width: 1600px; padding: 36px 44px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; }
+  h1 { margin: 0; font-size: 34px; color: var(--navy-dark); }
+  h1 span { color: var(--gold); }
+  .sub { color: var(--muted); font-size: 17px; }
+
+  #canvas { position: relative; height: 900px; margin-top: 20px; }
+  svg#links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+  .entity { position: absolute; background: #fff; border: 2px solid var(--navy); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 14px rgba(20, 42, 80, .10); z-index: 1; }
+  .entity h2 { margin: 0; padding: 9px 14px; background: var(--navy); color: #fff; font-size: 18px; font-family: "Ubuntu Mono", Consolas, monospace; display: flex; justify-content: space-between; align-items: baseline; }
+  .entity h2 small { font-family: Ubuntu, Arial, sans-serif; font-size: 12.5px; font-weight: 400; color: #c6d5f0; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td { padding: 4.5px 10px; border-top: 1px solid #e6ebf3; white-space: nowrap; }
+  td.k { width: 46px; }
+  td.n { font-family: "Ubuntu Mono", Consolas, monospace; font-size: 15px; }
+  td.t { color: var(--muted); font-size: 13px; text-align: right; }
+  .opt { color: #9aa3b5; font-style: italic; }
+  .b { display: inline-block; font-size: 10.5px; font-weight: 700; border-radius: 4px; padding: 1px 4px; margin-right: 2px; }
+  .pk { background: var(--gold); color: var(--navy-dark); }
+  .fk { background: #dbe6fa; color: var(--navy); }
+  .uk { background: #e2f3ea; color: #1f7a4d; }
+  .ix { background: #eef0f4; color: #5b667a; }
+  .entity .rule { padding: 6px 12px; font-size: 12.5px; color: var(--muted); background: #f8f9fc; border-top: 1px solid #e6ebf3; white-space: normal; }
+
+  .label { position: absolute; z-index: 2; transform: translate(-50%, -50%); background: var(--bg); padding: 1px 6px; font-size: 13px; color: var(--navy-dark); font-weight: 600; white-space: nowrap; border-radius: 6px; }
+  .label code { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+
+  .bottom { display: grid; grid-template-columns: 330px 1fr; gap: 22px; margin-top: 8px; }
+  .panel { background: #fff; border: 1px solid #d9e0ec; border-radius: 14px; padding: 12px 16px; font-size: 14px; line-height: 1.5; }
+  .panel h3 { margin: 0 0 6px; font-size: 14px; color: var(--navy-dark); text-transform: uppercase; letter-spacing: .05em; }
+  .legend-row { display: flex; align-items: center; gap: 10px; }
+  .notes { columns: 2; column-gap: 28px; }
+  .notes p { margin: 0 0 5px; break-inside: avoid; }
+  code { font-family: "Ubuntu Mono", Consolas, monospace; }
+  footer { margin-top: 14px; color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>Uni<span>Trade</span> — entity-relationship diagram</h1>
+    <div class="sub">MySQL 8 database <code>unitrade</code> · 6 tables · as built, 9 Oct 2026</div>
+  </header>
+
+  <div id="canvas">
+    <svg id="links"></svg>
+
+    <div class="entity" id="bulletin_posts" data-col="0" data-row="0">
+      <h2>bulletin_posts <small>FR5</small></h2>
+      <table>
+        <tr><td class="k"><span class="b pk">PK</span></td><td class="n">id</td><td class="t">bigint</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span></td><td class="n">author_id</td><td class="t">bigint → users</td></tr>
+        <tr><td class="k"></td><td class="n">title</td><td class="t">varchar(150)</td></tr>
+        <tr><td class="k"></td><td class="n">body</td><td class="t">varchar(2000)</td></tr>
+        <tr><td class="k"><span class="b ix">IX</span></td><td class="n">category</td><td class="t">enum</td></tr>
+        <tr><td class="k"><span class="b ix">IX</span></td><td class="n">created_at</td><td class="t">datetime</td></tr>
+      </table>
+      <div class="rule">Only the author may delete a post. No price field: non-commercial by design.</div>
+    </div>
+
+    <div class="entity" id="users" data-col="1" data-row="0">
+      <h2>users <small>FR1</small></h2>
+      <table>
+        <tr><td class="k"><span class="b pk">PK</span></td><td class="n">id</td><td class="t">bigint</td></tr>
+        <tr><td class="k"></td><td class="n">full_name</td><td class="t">varchar(100)</td></tr>
+        <tr><td class="k"><span class="b uk">UK</span></td><td class="n">email</td><td class="t">varchar(255)</td></tr>
+        <tr><td class="k"></td><td class="n">password_hash</td><td class="t">varchar(255)</td></tr>
+        <tr><td class="k"></td><td class="n">role</td><td class="t">enum (STUDENT)</td></tr>
+        <tr><td class="k"></td><td class="n">created_at</td><td class="t">datetime</td></tr>
+      </table>
+      <div class="rule">Email stored lower-case, must end in @mycput.ac.za. Password is a BCrypt hash, never the password.</div>
+    </div>
+
+    <div class="entity" id="listings" data-col="2" data-row="0">
+      <h2>listings <small>FR2 · FR3</small></h2>
+      <table>
+        <tr><td class="k"><span class="b pk">PK</span></td><td class="n">id</td><td class="t">bigint</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span><span class="b ix">IX</span></td><td class="n">seller_id</td><td class="t">bigint → users</td></tr>
+        <tr><td class="k"></td><td class="n">title</td><td class="t">varchar(150)</td></tr>
+        <tr><td class="k"></td><td class="n">description</td><td class="t"><span class="opt">null</span> varchar(2000)</td></tr>
+        <tr><td class="k"><span class="b ix">IX</span></td><td class="n">category</td><td class="t">enum</td></tr>
+        <tr><td class="k"><span class="b ix">IX</span></td><td class="n">type</td><td class="t">enum (GOOD, SERVICE)</td></tr>
+        <tr><td class="k"><span class="b ix">IX</span></td><td class="n">price</td><td class="t">decimal(10,2) ZAR</td></tr>
+        <tr><td class="k"><span class="b ix">IX</span></td><td class="n">item_condition</td><td class="t"><span class="opt">null</span> enum (NEW, USED)</td></tr>
+        <tr><td class="k"></td><td class="n">image_url</td><td class="t"><span class="opt">null</span> varchar(500)</td></tr>
+        <tr><td class="k"><span class="b ix">IX</span></td><td class="n">status</td><td class="t">enum (ACTIVE, SOLD, REMOVED)</td></tr>
+        <tr><td class="k"><span class="b ix">IX</span></td><td class="n">created_at</td><td class="t">datetime</td></tr>
+        <tr><td class="k"></td><td class="n">version</td><td class="t">bigint (optimistic lock)</td></tr>
+      </table>
+    </div>
+
+    <div class="entity" id="reviews" data-col="0" data-row="1">
+      <h2>reviews <small>FR6</small></h2>
+      <table>
+        <tr><td class="k"><span class="b pk">PK</span></td><td class="n">id</td><td class="t">bigint</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span><span class="b uk">UK</span></td><td class="n">order_id</td><td class="t">bigint → orders</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span></td><td class="n">reviewer_id</td><td class="t">bigint → users</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span><span class="b ix">IX</span></td><td class="n">seller_id</td><td class="t">bigint → users</td></tr>
+        <tr><td class="k"></td><td class="n">rating</td><td class="t">int (1–5)</td></tr>
+        <tr><td class="k"></td><td class="n">comment</td><td class="t"><span class="opt">null</span> varchar(1000)</td></tr>
+        <tr><td class="k"></td><td class="n">created_at</td><td class="t">datetime</td></tr>
+      </table>
+      <div class="rule">Unique key on order_id = one review per order, enforced by the database.</div>
+    </div>
+
+    <div class="entity" id="orders" data-col="1" data-row="1">
+      <h2>orders <small>FR4</small></h2>
+      <table>
+        <tr><td class="k"><span class="b pk">PK</span></td><td class="n">id</td><td class="t">bigint</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span><span class="b ix">IX</span></td><td class="n">buyer_id</td><td class="t">bigint → users</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span><span class="b ix">IX</span></td><td class="n">seller_id</td><td class="t">bigint → users</td></tr>
+        <tr><td class="k"></td><td class="n">status</td><td class="t">enum (PENDING, PAID, COMPLETED)</td></tr>
+        <tr><td class="k"></td><td class="n">total</td><td class="t">decimal(12,2) ZAR</td></tr>
+        <tr><td class="k"></td><td class="n">payment_reference</td><td class="t"><span class="opt">null</span> varchar(60)</td></tr>
+        <tr><td class="k"></td><td class="n">created_at</td><td class="t">datetime</td></tr>
+        <tr><td class="k"></td><td class="n">paid_at</td><td class="t"><span class="opt">null</span> datetime</td></tr>
+        <tr><td class="k"></td><td class="n">completed_at</td><td class="t"><span class="opt">null</span> datetime</td></tr>
+        <tr><td class="k"></td><td class="n">version</td><td class="t">bigint (optimistic lock)</td></tr>
+      </table>
+    </div>
+
+    <div class="entity" id="order_items" data-col="2" data-row="1">
+      <h2>order_items <small>FR4</small></h2>
+      <table>
+        <tr><td class="k"><span class="b pk">PK</span></td><td class="n">id</td><td class="t">bigint</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span><span class="b ix">IX</span></td><td class="n">order_id</td><td class="t">bigint → orders</td></tr>
+        <tr><td class="k"><span class="b fk">FK</span><span class="b ix">IX</span></td><td class="n">listing_id</td><td class="t">bigint → listings</td></tr>
+        <tr><td class="k"></td><td class="n">title</td><td class="t">varchar(150)</td></tr>
+        <tr><td class="k"></td><td class="n">price</td><td class="t">decimal(10,2)</td></tr>
+      </table>
+      <div class="rule">Title and price are copied at checkout, so an order keeps what was paid even if the listing changes later.</div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <div class="panel">
+      <h3>Notation (crow's foot)</h3>
+      <svg width="300" height="132" id="legend"></svg>
+    </div>
+    <div class="panel">
+      <h3>Rules the diagram cannot show</h3>
+      <div class="notes">
+        <p><b>One seller per order:</b> every item in an order belongs to <code>orders.seller_id</code>, so the buyer rates one seller (FR6).</p>
+        <p><b>Soft delete:</b> a deleted listing gets status REMOVED, so old <code>order_items</code> still point at a real row.</p>
+        <p><b>Race safety:</b> paying locks the listing rows (<code>SELECT … FOR UPDATE</code>); <code>version</code> columns are a second safety net.</p>
+        <p><b>Review only after COMPLETED</b> and only by the order's buyer (checked in ReviewService).</p>
+        <p><b>Services:</b> <code>item_condition</code> is null when <code>type</code> = SERVICE.</p>
+        <p><b>Search:</b> 6 indexes on <code>listings</code> serve the FR3 filters; only ACTIVE rows are returned.</p>
+        <p><b>Categories:</b> TEXTBOOKS, ELECTRONICS, FURNITURE, CLOTHING, STATIONERY, TUTORING, SERVICES, OTHER. Post categories: ANNOUNCEMENT, EVENT, SERVICE.</p>
+        <p><b>Keys:</b> every table has a bigint auto-increment primary key; all foreign keys are NOT NULL.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>PK primary key · FK foreign key · UK unique · IX indexed · <i>null</i> = optional column</span>
+    <span>Source: docs/diagrams/erd.html</span>
+  </footer>
+</div>
+
+<script>
+  // ---- Layout: 3 columns x 2 rows ----
+  const canvas = document.getElementById('canvas');
+  const colX = [0, 486, 1072];
+  const colW = [380, 480, 440];
+  const rowGap = 150;
+  const ents = [...document.querySelectorAll('.entity')];
+  ents.forEach((e) => { e.style.left = colX[e.dataset.col] + 'px'; e.style.width = colW[e.dataset.col] + 'px'; });
+  const row0H = Math.max(...ents.filter((e) => e.dataset.row === '0').map((e) => e.offsetHeight));
+  ents.forEach((e) => { e.style.top = (e.dataset.row === '0' ? 0 : row0H + rowGap) + 'px'; });
+  const row1H = Math.max(...ents.filter((e) => e.dataset.row === '1').map((e) => e.offsetHeight));
+  canvas.style.height = row0H + rowGap + row1H + 30 + 'px';
+
+  // ---- Drawing helpers ----
+  const NS = 'http://www.w3.org/2000/svg';
+  const LINE = '#4a5d80';
+  function el(svg, name, attrs) { const n = document.createElementNS(NS, name); for (const k in attrs) n.setAttribute(k, attrs[k]); svg.appendChild(n); return n; }
+  function box(id) { const e = document.getElementById(id); return { x: e.offsetLeft, y: e.offsetTop, w: e.offsetWidth, h: e.offsetHeight }; }
+  // point on a side; offset is from the side's start (left edge for top/bottom, top edge for left/right)
+  function point(id, side, offset) {
+    const b = box(id);
+    if (side === 'left') return { x: b.x, y: b.y + offset, d: [-1, 0] };
+    if (side === 'right') return { x: b.x + b.w, y: b.y + offset, d: [1, 0] };
+    if (side === 'top') return { x: b.x + offset, y: b.y, d: [0, -1] };
+    return { x: b.x + offset, y: b.y + b.h, d: [0, 1] };
+  }
+  // cardinality marks: 'one' (||), 'zeroOne' (o|), 'many' (o<), 'oneMany' (|<)
+  function mark(svg, p, kind) {
+    const [dx, dy] = p.d, nx = -dy, ny = dx;
+    const at = (k) => [p.x + dx * k, p.y + dy * k];
+    const bar = (k) => { const [x, y] = at(k); el(svg, 'line', { x1: x + nx * 8, y1: y + ny * 8, x2: x - nx * 8, y2: y - ny * 8, stroke: LINE, 'stroke-width': 2.2 }); };
+    const circle = (k) => { const [x, y] = at(k); el(svg, 'circle', { cx: x, cy: y, r: 5.5, fill: '#fff', stroke: LINE, 'stroke-width': 2.2 }); };
+    const crow = () => { const [x, y] = at(16); for (const s of [-1, 0, 1]) el(svg, 'line', { x1: x, y1: y, x2: p.x + nx * 9 * s, y2: p.y + ny * 9 * s, stroke: LINE, 'stroke-width': 2.2 }); };
+    if (kind === 'one') { bar(8); bar(14); }
+    if (kind === 'zeroOne') { bar(9); circle(22); }
+    if (kind === 'many') { crow(); circle(25); }
+    if (kind === 'oneMany') { crow(); bar(22); }
+  }
+  // orthogonal connector with an elbow at 'mid' (x for horizontal starts, y for vertical starts)
+  function link(svg, a, b, startKind, endKind, label, opts = {}) {
+    const horiz = a.d[0] !== 0;
+    let d, lx, ly;
+    if (horiz) {
+      const mx = opts.mid ?? (a.x + b.x) / 2;
+      d = `M${a.x},${a.y} H${mx} V${b.y} H${b.x}`;
+      lx = opts.lx ?? mx; ly = opts.ly ?? (a.y === b.y ? a.y : (a.y + b.y) / 2);
+    } else {
+      const my = opts.mid ?? (a.y + b.y) / 2;
+      d = `M${a.x},${a.y} V${my} H${b.x} V${b.y}`;
+      lx = opts.lx ?? (a.x + b.x) / 2; ly = opts.ly ?? my;
+    }
+    el(svg, 'path', { d, fill: 'none', stroke: LINE, 'stroke-width': 2.2 });
+    mark(svg, a, startKind); mark(svg, b, endKind);
+    // short horizontal links: verb above the line, column name below it, so the end marks stay visible
+    const parts = opts.split ? [[label.split('|')[0], ly - 15], [`<code>${label.split('|')[1]}</code>`, ly + 15]] : [[label, ly]];
+    for (const [html, y] of parts) {
+      const t = document.createElement('div');
+      t.className = 'label'; t.innerHTML = html; t.style.left = lx + 'px'; t.style.top = y + 'px';
+      canvas.appendChild(t);
+    }
+  }
+
+  const svg = document.getElementById('links');
+  const U = box('users'), O = box('orders'), L = box('listings'), R = box('reviews'), B = box('bulletin_posts'), I = box('order_items');
+
+  // users 1 — 0..* bulletin_posts (author)
+  link(svg, point('users', 'left', 60), point('bulletin_posts', 'right', 60), 'one', 'many', 'writes|author_id', { split: true });
+  // users 1 — 0..* listings (seller)
+  link(svg, point('users', 'right', 60), point('listings', 'left', 60), 'one', 'many', 'sells|seller_id', { split: true });
+  // users 1 — 0..* orders, twice (buyer, seller)
+  link(svg, point('users', 'bottom', 250), point('orders', 'top', 250), 'one', 'many', 'buys <code>buyer_id</code>', { ly: U.y + U.h + 55, lx: U.x + 250 });
+  link(svg, point('users', 'bottom', 360), point('orders', 'top', 360), 'one', 'many', 'receives <code>seller_id</code>', { ly: U.y + U.h + 100, lx: U.x + 360 });
+  // users 1 — 0..* reviews, twice (reviewer, seller)
+  link(svg, point('users', 'bottom', 40), point('reviews', 'top', 300), 'one', 'many', 'writes review <code>reviewer_id</code>', { mid: U.y + U.h + 45 });
+  link(svg, point('users', 'bottom', 120), point('reviews', 'top', 360), 'one', 'many', 'is rated <code>seller_id</code>', { mid: U.y + U.h + 95 });
+  // orders 1 — 0..1 reviews
+  link(svg, point('orders', 'left', 70), point('reviews', 'right', 70), 'one', 'zeroOne', 'has review|order_id', { split: true });
+  // orders 1 — 1..* order_items
+  link(svg, point('orders', 'right', 70), point('order_items', 'left', 70), 'one', 'oneMany', 'contains|order_id', { split: true });
+  // listings 1 — 0..* order_items
+  link(svg, point('listings', 'bottom', 200), point('order_items', 'top', 200), 'one', 'many', 'appears in <code>listing_id</code>');
+
+  // ---- Legend ----
+  const lg = document.getElementById('legend');
+  [['one', 'exactly one'], ['zeroOne', 'zero or one'], ['many', 'zero or many'], ['oneMany', 'one or many']].forEach(([k, txt], i) => {
+    const y = 16 + i * 32;
+    el(lg, 'line', { x1: 6, y1: y, x2: 70, y2: y, stroke: LINE, 'stroke-width': 2.2 });
+    mark(lg, { x: 70, y, d: [-1, 0] }, k);
+    const t = el(lg, 'text', { x: 92, y: y + 5, 'font-size': 14, fill: '#1b2333', 'font-family': 'Ubuntu, Arial, sans-serif' });
+    t.textContent = txt;
+  });
+</script>
+</body>
+</html>

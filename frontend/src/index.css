@@ -770,6 +770,24 @@ a {
   }
 }
 
+/* ---------- Narrow phones (360-400 px) ----------
+   Brand + "Cart (2)" + Sell + Menu need about 220 px of nav space with the normal spacing,
+   which pushed Menu onto a second header line (DEF-10). Tighter spacing keeps one row; tap targets stay 44 px high. */
+@media (max-width: 400px) {
+  .app-header {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .app-nav {
+    gap: 0;
+  }
+
+  .nav-link {
+    padding: 0 8px;
+  }
+}
+
 /* ---------- Wider screens ---------- */
 @media (min-width: 768px) {
   h1 {

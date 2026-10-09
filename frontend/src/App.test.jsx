@@ -46,4 +46,13 @@ describe('Slice 0 - app shell', () => {
     renderAt('/status');
     expect(await screen.findByRole('alert')).toHaveTextContent(/unexpected response/i);
   });
+
+  it('nfr3_03 a plain-text 500 from the dev proxy (API stopped) is shown as "cannot reach the server", not a generic error', async () => {
+    // What the Vite proxy (or a host whose API is asleep) answers when the backend is down
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('', { status: 500, headers: { 'Content-Type': 'text/plain' } }),
+    );
+    renderAt('/status');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/cannot reach the unitrade server/i);
+  });
 });

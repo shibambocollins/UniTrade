@@ -9,26 +9,25 @@ export default function SellerReviews({ userId }) {
   if (loading) return <Loading label="Loading reviews…" />;
   if (error) return <ErrorMessage message={error.message} onRetry={error.status === 404 ? undefined : reload} />;
 
+  // With no reviews only the empty state is shown (the summary line would repeat "No reviews yet").
+  if (data.reviews.length === 0) return <EmptyState title="No reviews yet" />;
+
   return (
     <div>
       <p className="rating-line">
         <RatingSummary average={data.averageRating} count={data.reviewCount} />
       </p>
-      {data.reviews.length === 0 ? (
-        <EmptyState title="No reviews yet" />
-      ) : (
-        <ul className="line-list">
-          {data.reviews.map((review) => (
-            <li key={review.id} className="review">
-              <p>
-                <Stars value={review.rating} /> <strong>{review.reviewerName}</strong>{' '}
-                <span className="muted">· {new Date(review.createdAt).toLocaleDateString('en-ZA')}</span>
-              </p>
-              {review.comment && <p>{review.comment}</p>}
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="line-list">
+        {data.reviews.map((review) => (
+          <li key={review.id} className="review">
+            <p>
+              <Stars value={review.rating} /> <strong>{review.reviewerName}</strong>{' '}
+              <span className="muted">· {new Date(review.createdAt).toLocaleDateString('en-ZA')}</span>
+            </p>
+            {review.comment && <p>{review.comment}</p>}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
