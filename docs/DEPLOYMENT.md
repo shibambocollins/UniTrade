@@ -3,15 +3,15 @@
 The marker runs the app locally (see README). The deployment is for the demo video and so problems surface early.
 Written so the person taking over can finish the backend deployment with **their own free Render and Aiven accounts** (section 4, about 20 minutes), and change settings later by commit instead of through dashboards.
 
-## 1. Current state (handover, 2026-10-08)
+## 1. Current state (updated 2026-10-09)
 
 | Part | Host | Status | Address |
 |---|---|---|---|
 | Frontend (React build) | **Vercel**, project `uni-trade` (Collins's account) | **Live**, redeploys on every push to `main`. Nothing to do. | https://uni-trade-eight.vercel.app |
-| Backend (Spring Boot) | **Render**, web service `unitrade-cput-api` (Docker, free) | **Not created — to do by the person taking over** (section 4). Use exactly this name so the address matches `frontend/.env.production`. | https://unitrade-cput-api.onrender.com (after creation) |
-| Database (MySQL 8.4) | **Aiven**, free MySQL | **To do by the person taking over** (section 4.B). Collins created a test one on 2026-10-08 and the production-mode API connected to it from the dev PC (MySQL 8.4.11, TLS, `sql_require_primary_key=1`), so this setup is known to work. | (connection details only in Render) |
+| Backend (Spring Boot) | **Render**, web service `unitrade-cput-api` (Docker, free, Frankfurt), built from GitHub `HumphreyMahlangu/UniTrade` branch `main` | **Live since 2026-10-09.** Redeploys on every push that changes `backend/`. Sleeps after 15 idle minutes (first request then takes 1.5–3 min). | https://unitrade-cput-api.onrender.com |
+| Database (MySQL) | **Aiven**, free MySQL service `unitrade-db`, database `defaultdb` | **Live since 2026-10-09.** Tables created and demo data seeded by the API on first start. | (connection details only in Render's environment variables) |
 
-When the backend is live: update this table, run the check in section 5, and record the result as manual test M0-04 in `docs/EVIDENCE.md`.
+**Check run 2026-10-09 18:10 (+0200):** `node scripts/check-deploy.mjs --web https://uni-trade-eight.vercel.app --api https://unitrade-cput-api.onrender.com` → **all 6 checks PASS** (API and database UP, site and deep links load, the site points at this API, CORS allows the site and refuses others). The live API returned 14 active demo listings and 4 bulletin posts, and the demo login `thabo@mycput.ac.za` worked.
 
 ```mermaid
 flowchart LR
